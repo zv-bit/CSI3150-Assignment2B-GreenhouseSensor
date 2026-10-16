@@ -16,7 +16,52 @@
     </body>
 
     <main class="contianer">
-        
+        <aside class="form-panel">
+            <h2 class="panel-title">Record Sensor Output</h2>
+            <!-- <div id="form-error-banner" class="alert alert-danger hidden" role="alert"></div> -->
+
+            <form action="#" id="sensor-form" novalidate>
+                <div class="form-group">
+                    <label for="sensor-number" class="form-label">Sensor Name <span class="required">*</span></label>
+                    <input
+                    type="number"
+                    name="sensor-number"
+                    id="sensor-number"
+                    class="form-control"
+                    placeholder="e.g. 6742341"
+                    required
+                    />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ph-level" class="form-label">Enter pH Level <span class="required"></span></label>
+                        <input
+                        type="number"
+                        name="ph-level"
+                        id="ph-level"
+                        class="form-control"
+                        min="0"
+                        max="14"
+                        placeholder="7"
+                        required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="tempurature" class="form-label">Tempurature (F)<span class="required">*</span></label>
+                        <input
+                        type="number"
+                        name="tempurature"
+                        id="tempurature"
+                        class="form-control"
+                        placeholder="75"
+                        required
+                        />
+                    </div>
+                    <button type="submit" id="btn-submit" class="btn btn-primary">Log Sensor Data</button>
+                </div>
+            </form>
+        </aside>
     </main>
 
 
