@@ -4,15 +4,17 @@
     const STORAGE_KEY = "agrosens_telemetry_records_v1"
 
     const sensorForm = document.getElementById("sensor-form");
-    const inputSensor = document.getElementById("sensor-number");
-    const inputPh = document.getElementById("ph-level");
-    const inputTemp = document.getElementById("tempurature");
     const btnSubmit = document.getElementById("btn-submit");
     const btnClearAll = document.getElementById("btn-clear-all");
     const emptyState = document.getElementById("empty-state");
     const logList = document.getElementById("log-list");
-    const inputEc = document.getElementById("elec-conduct");
-    const inputHumidity = document.getElementById("humidity")
+    const queueCount = document.getElementById("queue-count");
+
+    const inputEc = document.getElementById("electrical");
+    const inputHumidity = document.getElementById("humidity");
+    const inputSensor = document.getElementById("sensor-number");
+    const inputPh = document.getElementById("ph-level");
+    const inputTemp = document.getElementById("tempurature");
 
     let logs = loadLogs();
     render();
@@ -23,15 +25,15 @@
             return stored ? JSON.parse(stored):[];
         } catch (error){
             console.error("Failed to load logs from data storage", error);
-            return[]
+            return[];
         }
     }
 
     function saveLogs(){
         try {
-            localStorage.setItem(STORAGE_KEY,JSON.stringify(logs))
+            localStorage.setItem(STORAGE_KEY,JSON.stringify(logs));
         } catch (error) {
-            console.error("Failed to write to your data storage",error)
+            console.error("Failed to write to your data storage",error);
         }
     }
 
@@ -78,6 +80,7 @@
             ec:parseInt(inputEc.value,10),
             humidity:parseInt(inputHumidity.value,10),
             timestamp: new Date().toLocaleTimeString([],{ month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})};
+            
         const validationErrors  = validation(formData);
 
         if (validationErrors.length > 0){
@@ -98,5 +101,87 @@
         sensorForm.reset();
         inputSensor.focus();
     });
+    
+    logList.addEventListener("click",function(event) {
+        const target = event.target;
+        if (target.classList.contains("btn-remove")){
+            const recordId = target.dataset.id;
+            records = logs.filter(function (record){
+                return record.id !== recordId;
+            });
+            saveRecords();
+            render();
+        }
+    });
 
-})
+    btnClearAll.addEventListener("click",(event)=>{
+        if (logs.length===0) return;
+        if (confirm("Are you sure you want to delete all previous logs?")){
+            records = [];
+            saveRecords();
+            render();
+        }
+    });
+
+    function render() {
+        queueCount.textContent = logs.length;
+
+        if (logs.length === 0) {
+          emptyState.classList.remove("hidden");
+          logList.innerHTML = "";
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+
+        const fragment = document.createDocumentFragment();
+
+        logs.forEach(function (rec) {
+          const li = document.createElement("li");
+          li.className = "sensor-card status-" + rec.risk.level;
+
+          // create our dynamic card
+          li.innerHTML = `<div class="card-top">
+                <div>
+                    <div class="patient-name-text">${escapeHtml(rec.sensor)} </div>
+                    <div class="timestamp">Logged at ${rec.timestamp} </div> 
+                    <span class="risk-badge ${rec.risk.level}">${rec.risk.label}</span>            
+                </div>
+                <div class="vital-stats">
+                  <div class="stat-item"><span>pH Level</span>${rec.phlevel}</div>
+                  <div class="stat-item"><span>Electronic Current</span>${rec.ec}</div>
+                  <div class="stat-item"><span>Humidity</span>${rec.humidity} %</div>
+                  <div class="stat-item"><span>Temperature</span>${rec.temp.toFixed(1)} F </div> 
+                </div>
+                <button class="btn btn-outline-danger btn-sm btn-discharge" data-id="${rec.id}">Discharge Patient </button>        
+            </div>`;
+
+          // add the above html to the vritual dom
+          fragment.appendChild(li);
+        });
+
+        // reset the UI
+        logList.innerHTML = "";
+        // add the docu fragment to the REaL dom
+        logList.appendChild(fragment);
+    }
+
+    function displayError(message){
+        errorBanner.textContent=message;
+        errorBanner.classList.remove("hidden");
+    }
+
+    function hideError(){
+      errorBanner.textContent="";
+      errorBanner.classList.add("hidden");
+    }
+
+    function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+    }
+
+
+})();
