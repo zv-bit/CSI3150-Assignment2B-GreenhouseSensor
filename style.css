@@ -1,10 +1,10 @@
 :root {
   --bg-app: #0f2a0f;
-  --bg-panel: #1e3b1e;
+  --bg-panel: #476947;
   --bg-card: #335533;
   --text-main: #f9fcf8;
   --text-muted: #94b894;
-  --border-color: #476947;
+  --border-color: #1e3b1e;
 
   --primary: #02c70c;
   --primary-hover: #03a103;
@@ -23,6 +23,47 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+.header{
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+}
+
+.header-content{
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container{
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 2rem;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.form-panel{
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1.5rem;
 }
 
 @media (max-width: 860px) {
