@@ -11,9 +11,10 @@
             <div class="header-content">
                 <span class="icon">🪴</span>
                 <h1>Greener Pastures</h1>
+                <span class="icon">🪴</span>
             </div>
             <div class="header-status">
-                Active Logs: <span id="queue-count" class="badge-count">0</span>
+                Active Logs: <span id="log-count" class="badge-count">0</span>
             </div>
         </header>
     </body>
@@ -21,6 +22,8 @@
     <main class="contianer">
         <aside class="form-panel">
             <h2 class="panel-title">Record Sensor Output</h2>
+
+            <div id="form-error-banner" class="alert alert-danger hidden" role="alert"></div>
 
             <form action="#" id="sensor-form" novalidate>
                 <div class="form-group">
@@ -65,7 +68,7 @@
                         <input
                         type="number"
                         name="electrical"
-                        id="tempurature"
+                        id="electrical"
                         class="form-control"
                         placeholder="1.5"
                         required

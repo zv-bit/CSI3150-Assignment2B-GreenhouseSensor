@@ -1,14 +1,14 @@
 (function(){
-    "use strict()"
+    "use strict";
 
     const STORAGE_KEY = "agrosens_telemetry_records_v1"
 
     const sensorForm = document.getElementById("sensor-form");
-    const btnSubmit = document.getElementById("btn-submit");
     const btnClearAll = document.getElementById("btn-clear-all");
     const emptyState = document.getElementById("empty-state");
     const logList = document.getElementById("log-list");
-    const queueCount = document.getElementById("queue-count");
+    const logCount = document.getElementById("log-count");
+    const errorBanner = document.getElementById("form-error-banner");
 
     const inputEc = document.getElementById("electrical");
     const inputHumidity = document.getElementById("humidity");
@@ -37,17 +37,20 @@
         }
     }
 
-    function plantRisk(inputPh,inputTemp,inputEc,inputHumidity){
-        if ((inputPh<5.0||inputPh<7.5) && (inputTemp<55||inputTemp>95) && (inputEc<0.2||inputEc>4.5)&&(inputHumidity<30||inputHumidity>90)){
-            return {level:"critical",label:"Critical"};
-        } 
-        else if ((5.5<=inputPh<=6.5) && (64.4<=inputTemp<=71.6) && (1.0<=inputEc<=2.0)&&(50<=inputHumidity<=70)){
-            return {level:"optimal",label:"Optimal"};
-        }
-        else {
-            return {level:"warning",label:"Warning"};
-        }
+function plantRisk(inputPh, inputTemp, inputEc, inputHumidity) {
+
+    if ((inputPh<5.0||inputPh>7.5)&&(inputTemp<55||inputTemp>95)&&(inputEc<0.2||inputEc>4.5)&&(inputHumidity<30||inputHumidity>90)) 
+    {
+        return { level: "critical", label: "Critical" };
     }
+    else if ((inputPh>=5.5&&inputPh<=6.5)&&(inputTemp>=64.4&&inputTemp<=71.6)&&(inputEc>=1.0&&inputEc<=2.0)&&(inputHumidity>=50&&inputHumidity<=70))
+    {
+        return { level: "optimal", label: "Optimal" };
+    }
+    else {
+        return { level: "warning", label: "Warning" };
+    }
+}
     
     function validation(data){
         const errors = [];
@@ -55,16 +58,16 @@
         if(!data.sensor.trim()){
             errors.push("Sensor Number is a required Field");
         }
-        if (isNaN(data.level)||data.level<0||data.level>14){
+        if (isNaN(data.phlevel)||data.phlevel<0||data.phlevel>14){
             errors.push("pH level must be a number between 0 and 14");
         }
-        if (isNaN(data.inputTemp)){
+        if (isNaN(data.temp)){
             errors.push("Temperature must have an input");
         }
-        if (isNaN(data.inputEc)){
+        if (isNaN(data.elect)){
             errors.push("Electrical conductivity must have an input");
         }
-        if (isNaN(data.inputHumidity||data.inputHumidity<0||data.inputHumidity>100)){
+        if (isNaN(data.humidity||data.humidity<0||data.humidity>100)){
             errors.push("Humidity must be a percentile number between 0 and 100");
         }
         return errors;
@@ -75,11 +78,11 @@
         const formData={
             id:crypto.randomUUID(),
             sensor: inputSensor.value,
-            phlevel: parseInt(inputPh.value,10),
-            temp:parseInt(inputTemp.value,10),
-            ec:parseInt(inputEc.value,10),
-            humidity:parseInt(inputHumidity.value,10),
-            timestamp: new Date().toLocaleTimeString([],{ month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})};
+            phlevel: parseFloat(inputPh.value),
+            temp:parseFloat(inputTemp.value),
+            elect:parseFloat(inputEc.value),
+            humidity:parseFloat(inputHumidity.value),
+            timestamp: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
             
         const validationErrors  = validation(formData);
 
@@ -93,23 +96,24 @@
         formData.risk = plantRisk(
             formData.phlevel,
             formData.temp,
-            formData.ev,
+            formData.elect,
             formData.humidity,);
         
         logs.unshift(formData);
         saveLogs();
         sensorForm.reset();
         inputSensor.focus();
+        render();
     });
     
     logList.addEventListener("click",function(event) {
         const target = event.target;
         if (target.classList.contains("btn-remove")){
-            const recordId = target.dataset.id;
-            records = logs.filter(function (record){
-                return record.id !== recordId;
+            const logId = target.dataset.id;
+            logs = logs.filter(function (logged){
+                return logged.id !== logId;
             });
-            saveRecords();
+            saveLogs();
             render();
         }
     });
@@ -117,14 +121,14 @@
     btnClearAll.addEventListener("click",(event)=>{
         if (logs.length===0) return;
         if (confirm("Are you sure you want to delete all previous logs?")){
-            records = [];
-            saveRecords();
+            logs = [];
+            saveLogs();
             render();
         }
     });
 
     function render() {
-        queueCount.textContent = logs.length;
+        logCount.textContent = logs.length;
 
         if (logs.length === 0) {
           emptyState.classList.remove("hidden");
@@ -143,26 +147,24 @@
           // create our dynamic card
           li.innerHTML = `<div class="card-top">
                 <div>
-                    <div class="patient-name-text">${escapeHtml(rec.sensor)} </div>
+                    <div class="sensor-name-text">Sensor: ${escapeHtml(rec.sensor)} </div>
+                    <span class="warning-badge ${rec.risk.level}">${rec.risk.label}</span>
                     <div class="timestamp">Logged at ${rec.timestamp} </div> 
-                    <span class="risk-badge ${rec.risk.level}">${rec.risk.label}</span>            
                 </div>
-                <div class="vital-stats">
-                  <div class="stat-item"><span>pH Level</span>${rec.phlevel}</div>
-                  <div class="stat-item"><span>Electronic Current</span>${rec.ec}</div>
-                  <div class="stat-item"><span>Humidity</span>${rec.humidity} %</div>
-                  <div class="stat-item"><span>Temperature</span>${rec.temp.toFixed(1)} F </div> 
+                <div class="sensor-stats">
+                  <div class="stat-item"><span>pH Level: </span>${rec.phlevel}</div>
+                  <div class="stat-item"><span>Temperature: </span>${rec.temp.toFixed(1)} F </div> 
+                  <div class="stat-item"><span>E-Current: </span>${rec.elect}</div>
+                  <div class="stat-item"><span>Humidity: </span>${rec.humidity} %</div>
                 </div>
-                <button class="btn btn-outline-danger btn-sm btn-discharge" data-id="${rec.id}">Discharge Patient </button>        
+                <button class="btn btn-outline-danger btn-sm btn-remove" data-id="${rec.id}">Remove Log</button>        
             </div>`;
 
-          // add the above html to the vritual dom
           fragment.appendChild(li);
         });
 
-        // reset the UI
+
         logList.innerHTML = "";
-        // add the docu fragment to the REaL dom
         logList.appendChild(fragment);
     }
 
